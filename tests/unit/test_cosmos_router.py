@@ -2,11 +2,13 @@ from datetime import datetime
 from typing import Any, Dict
 from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
+from fastapi import FastAPI
 from app.main import app
 from pytest_mock import MockerFixture
 import httpx
-from app.models.custom_types import CosmosAccountStatus
+from app.models.custom_types import CosmosAccountStatus, CosmosAPIType
 from app.models.cosmos_models import CosmosAccountStatusResponse
+from app.routers.cosmos_router import get_cosmos_manager
 
 def test_create_cosmos_account_async(mocker: MockerFixture) -> None:
     """Test account creation endpoint initiastes async provisioning"""
@@ -14,27 +16,35 @@ def test_create_cosmos_account_async(mocker: MockerFixture) -> None:
     #
     # Mock the azure integration class to prevent real API Calls
 
-    mock_cosmos_manager: MagicMock = mocker.patch(
+    mock_manager_class = mocker.patch(
         "app.routers.cosmos_router.AzureCosmosManager"
     )
 
-    # Configure mock response
-    mock_response = CosmosAccountStatusResponse(
-        account_name="test-account",
-        status=CosmosAccountStatus.QUEUED,
-        created_at=datetime.now(),
-        updated_at=datetime.now(),
-        message="Provisioning queued",
+    mock_async_method: mocker.AsyncMock = mocker.AsyncMock(
+        return_value=CosmosAccountStatusResponse(
+            account_name="test_account",
+            status= CosmosAccountStatus.QUEUED,
+            created_at=datetime.now(),
+            updated_at=datetime.now(),
+            message="Provisioning initiated",
+        )
     )
-    mock_cosmos_manager.return_value.test_create_cosmos_account_async.return_value = mock_response
+
+
+    # Configure mock instance
+    mock_manager_instance = mock_manager_class.return_value
+    mock_manager_instance.create_account_async = mock_async_method
+
+    #override fastapi dep
+    app.dependency_overrides[get_cosmos_manager] = lambda: mock_manager_instance
 
     # initialize client
-    client: TestClient = TestClient(app, backend="asyncio")
+    client: TestClient = TestClient(app)
 
     # test payload
 
     test_payload: Dict[str, str] = {
-        "account_name": "test-account",
+        "account_name": "test_account",
         "location": "eastus",
         "api_type": "sql",
     }
@@ -47,14 +57,16 @@ def test_create_cosmos_account_async(mocker: MockerFixture) -> None:
 
     # Check the response body
     response_data: Dict[str, Any] = response.json()
-    assert response_data=={
-        "message": "Account provisioning initiated",
-        "status_endpoint": "/cosmos/status/test-account",
-    }
-    #mock call verification
-    mock_cosmos_manager.return_value.create_account_async.assert_called_once_with(
-        account_name=test_payload["account_name"], #str
-        location=test_payload["location"], #str
-        api_type=test_payload["api_type"],#Literal["sql", "mongo"]
+    assert response_data["account_name"] == "test_account"
+    assert response_data["status"] == CosmosAccountStatus.QUEUED
+
+    # Verify async method was called with correct parameters
+    mock_async_method.assert_awaited_once_with(
+        account_name="test_account",
+        location="eastus",
+        api_type=   CosmosAPIType.SQL
     )
+
+    # Cleanup: Reset dependency overrides
+    app.dependency_overrides.clear()
 
