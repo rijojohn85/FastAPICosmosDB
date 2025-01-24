@@ -1,18 +1,16 @@
 import os
-import traceback
-from datetime import datetime
-from typing import Annotated
 
 from azure.core.exceptions import AzureError
 from dotenv import load_dotenv
-from fastapi import APIRouter, BackgroundTasks, status, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, status, HTTPException, Depends
+
 from app.models.cosmos_models import (
 CreateCosmosAccountRequest,
 CosmosAccountStatusResponse,
 ErrorResponse
 )
-from app.models.custom_types import CosmosAccountStatus
 from app.services.azure_cosmos_manager import AzureCosmosManager
+from app.models.custom_types import CosmosAPIType
 
 router = APIRouter(
     prefix="/cosmos",
@@ -26,19 +24,11 @@ load_dotenv()
 subscription_id = os.getenv("AZURE_SUBSCRIPTION_ID")
 resource_group = os.getenv("AZURE_RESOURCE_GROUP")
 
-class AzureSettings:
-    """Dependency class for Azure Configuration"""
-    def __init__(self)->None:
-        self.subscription_id = subscription_id
-        self.resource_group = resource_group
-
-def get_azure_settings()->AzureSettings:
-    return AzureSettings()
-async def get_cosmos_manager(settings: Annotated[AzureSettings, Depends(get_azure_settings)])->AzureCosmosManager:
+def get_cosmos_manager() -> AzureCosmosManager:
     """Dependency that provides a configured AzureCosmosManager instance"""
     return AzureCosmosManager(
-        subscription_id=settings.subscription_id,
-        resource_group=settings.resource_group,
+        subscription_id=os.getenv("AZURE_SUBSCRIPTION_ID"),
+        resource_group=os.getenv("AZURE_RESOURCE_GROUP")
     )
 
 @router.post(
@@ -59,7 +49,7 @@ async def get_cosmos_manager(settings: Annotated[AzureSettings, Depends(get_azur
 async def create_cosmos_account(
         request: CreateCosmosAccountRequest,
         background_tasks: BackgroundTasks,
-        manager: Annotated[AzureCosmosManager, Depends(get_azure_settings)]
+        manager: AzureCosmosManager = Depends(get_cosmos_manager)
 )->CosmosAccountStatusResponse:
     """EndPoint to initiate CosmosDB account provisioning"""
     try:

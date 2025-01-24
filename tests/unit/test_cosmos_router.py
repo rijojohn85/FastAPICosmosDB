@@ -2,13 +2,11 @@ from datetime import datetime
 from typing import Any, Dict
 from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
-from app.routers.cosmos_router import router
 from app.main import app
 from pytest_mock import MockerFixture
 import httpx
 from app.models.custom_types import CosmosAccountStatus
 from app.models.cosmos_models import CosmosAccountStatusResponse
-
 
 def test_create_cosmos_account_async(mocker: MockerFixture) -> None:
     """Test account creation endpoint initiastes async provisioning"""
@@ -26,6 +24,7 @@ def test_create_cosmos_account_async(mocker: MockerFixture) -> None:
         status=CosmosAccountStatus.QUEUED,
         created_at=datetime.now(),
         updated_at=datetime.now(),
+        message="Provisioning queued",
     )
     mock_cosmos_manager.return_value.test_create_cosmos_account_async.return_value = mock_response
 
