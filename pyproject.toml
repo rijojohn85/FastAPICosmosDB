@@ -31,4 +31,23 @@ pytest-mock = "^3.14.0"
 httpx = "^0.28.1"
 requests-mock = "^1.12.1"
 pytest-asyncio = "^0.25.2"
+mypy = "^1.14.1"
+types-requests = "^2.32.0.20241016"
+types-python-dateutil = "^2.9.0.20241206"
 
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+exclude = "^(venv|.venv|env|.env)"
+warn_unused_configs = true
+plugins = ["pydantic.mypy"]
+
+
+[[tool.mypy.overrides]]
+module = [
+    "fastapi.*",
+    "pydantic.*",
+    "azure.*"
+]
+ignore_missing_imports = true
