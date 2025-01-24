@@ -4,6 +4,7 @@ from datetime import datetime
 from azure.core.exceptions import AzureError
 from dotenv import load_dotenv
 from fastapi import APIRouter, BackgroundTasks, status, HTTPException, Depends
+from app.services.logging_service import logger
 
 from app.models.cosmos_models import (
 CreateCosmosAccountRequest,
@@ -74,6 +75,7 @@ async def create_cosmos_account(
 
         return StatusTracker.get_status(request.account_name)
     except ValueError as e:
+        logger.error(str(e))
         StatusTracker.update_status(
             account_name=request.account_name,
             status=CosmosAccountStatus.ERROR,
@@ -86,6 +88,7 @@ async def create_cosmos_account(
         },)
 
     except AzureError as e:
+        logger.error(str(e))
         StatusTracker.update_status(
             account_name=request.account_name,
             status=CosmosAccountStatus.ERROR,
@@ -150,6 +153,7 @@ async def execute_provisioning(
             message="Provisioning completed successfully"
         )
     except Exception as e:
+        logger.error(str(e))
         #update status on error
         StatusTracker.update_status(
             account_name=account_name,

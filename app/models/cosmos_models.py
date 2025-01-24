@@ -13,7 +13,7 @@ class CreateCosmosAccountRequest(BaseModel):
     location: str=Field(
         ...,
         min_length=5,
-        examples=["eastus"]
+        examples=["Central India"]
     )
     api_type: CosmosAPIType=Field(
         default=CosmosAPIType.SQL,

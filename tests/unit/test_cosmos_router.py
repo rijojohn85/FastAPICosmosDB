@@ -46,7 +46,7 @@ def test_create_cosmos_account_async(mocker: MockerFixture) -> None:
 
     test_payload: Dict[str, str] = {
         "account_name": "test_account",
-        "location": "eastus",
+        "location": "Central India",
         "api_type": "sql",
     }
 
@@ -64,7 +64,7 @@ def test_create_cosmos_account_async(mocker: MockerFixture) -> None:
     # Verify async method was called with correct parameters
     mock_async_method.assert_awaited_once_with(
         account_name="test_account",
-        location="eastus",
+        location="Central India",
         api_type=   CosmosAPIType.SQL
     )
 

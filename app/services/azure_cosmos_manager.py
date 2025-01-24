@@ -1,6 +1,7 @@
 import asyncio
 from typing import Optional, Dict, Any
 from datetime import datetime
+from app.services.logging_service import logger
 
 from azure.identity import AzureCliCredential
 from azure.core.credentials import TokenCredential
@@ -116,6 +117,7 @@ class AzureCosmosManager:
                 "Provisioning Initiated"
             )
         except AzureError as err:
+            logger.error(err.message)
             return self._create_status_response(
                 account_name,
                 CosmosAccountStatus.ERROR,
