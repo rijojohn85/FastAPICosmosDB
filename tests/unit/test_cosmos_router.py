@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any, Dict
 from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
+from app.routers.cosmos_router import router
 from app.main import app
 from pytest_mock import MockerFixture
 import httpx

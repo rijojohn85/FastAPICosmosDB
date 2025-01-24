@@ -14,8 +14,6 @@ ApiProperties
 )
 
 from azure.core.exceptions import AzureError
-from azure.core.polling import AsyncLROPoller
-from google.auth import message
 
 from app.models.custom_types import CosmosAPIType, CosmosAccountStatus
 from app.models.cosmos_models import CosmosAccountStatusResponse
@@ -32,7 +30,7 @@ class AzureCosmosManager:
             self,
             subscription_id: str,
             resource_group: str,
-            credential: TokenCredential,
+            credential: TokenCredential=None,
     ):
         """Initializes AzureCosmosManager
         Args:
