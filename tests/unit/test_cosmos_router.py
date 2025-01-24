@@ -9,6 +9,7 @@ import httpx
 from app.models.custom_types import CosmosAccountStatus, CosmosAPIType
 from app.models.cosmos_models import CosmosAccountStatusResponse
 from app.routers.cosmos_router import get_cosmos_manager
+from app.services.status_tracker import StatusTracker
 
 def test_create_cosmos_account_async(mocker: MockerFixture) -> None:
     """Test account creation endpoint initiastes async provisioning"""
@@ -70,3 +71,31 @@ def test_create_cosmos_account_async(mocker: MockerFixture) -> None:
     # Cleanup: Reset dependency overrides
     app.dependency_overrides.clear()
 
+def test_get_provisioning_status_success() -> None:
+    """Test successful status retrieval"""
+    # Setup
+    test_account = "test-account-123"
+    StatusTracker.update_status(
+        test_account,
+        CosmosAccountStatus.IN_PROGRESS,
+        "Provisioning in progress"
+    )
+
+    client: TestClient = TestClient(app)
+    # Execute
+    response = client.get(f"/cosmos/accounts/{test_account}")
+
+    # Verify
+    assert response.status_code == 200
+    assert response.json()["status"] == "in_progress"
+
+    # Cleanup
+    StatusTracker._statues.clear()
+
+def test_get_provisioning_status_not_found() -> None:
+    """Test status check for non-existent account"""
+    client: TestClient = TestClient(app)
+    response = client.get("/cosmos/accounts/non-existent")
+
+    assert response.status_code == 404
+    assert response.json()["detail"]["error_code"] == "ACCOUNT_NOT_FOUND"
