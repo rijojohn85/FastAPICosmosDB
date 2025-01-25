@@ -1,6 +1,4 @@
 import os
-import traceback
-from datetime import datetime
 from azure.core.exceptions import AzureError
 from dotenv import load_dotenv
 from fastapi import APIRouter, BackgroundTasks, status, HTTPException, Depends
@@ -14,6 +12,8 @@ ErrorResponse
 from app.services.azure_cosmos_manager import AzureCosmosManager
 from app.services.status_tracker import StatusTracker
 from app.models.custom_types import CosmosAPIType, CosmosAccountStatus
+from app.services.gmail_sender import GmailSender
+from app.core.config.settings import get_settings, Settings
 
 router = APIRouter(
     prefix="/cosmos",
@@ -161,7 +161,40 @@ async def execute_provisioning(
             message=str(e),
         )
 
+async def handle_provisioning_failure(
+        account_name: str,
+        error: Exception,
+        background_tasks: BackgroundTasks,
+        settings: Settings = Depends(get_settings)
+)->None:
+    """Queue failure notification email on provisioning failure"""
+    background_tasks.add_task(
+        send_failure_notification,
+        account_name,
+        str(error),
+        settings
+    )
 
-async def send_provisioning_notification(account_name: str, api_type: str)->None:
-    """Background  task for sending provisioning notification"""
-    print("Sending provisioning notification")
+def send_failure_notification(
+        account_name: str,
+        error_message: str,
+        settings: Settings
+)->None:
+    """Send email notification on provisioning failure"""
+    try:
+        with GmailSender(settings) as email_sender:
+            email_sender.send(
+                to=settings.GMAIL_ADDRESS,
+                subject=f"Provisioning failed for {account_name}",
+                body=f"""CosmosDB account provisioning faile:
+                Account Name: {account_name}
+                Error: {error_message}
+                Required Action:
+                1. Check Azure portal for resource status.
+                2. Check detail.log file for errors
+                3. Review account name availability
+                4. Ensure location selected is avaialble for your account at this time.
+                Provisioning failed for {account_name} with error: {error_message}"""
+            )
+    except Exception as e:
+        logger.error(f"Email notification failed: {str(e)}")

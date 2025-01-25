@@ -1,6 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, PostgresDsn
-from typing import Optional
+from pydantic import Field
 
 
 class Settings(BaseSettings):
@@ -22,11 +21,11 @@ class Settings(BaseSettings):
         description="Azure resource group name",
     )
 
-    EMAIL_SENDER: str = Field(
+    GMAIL_ADDRESS: str= Field(
         ...,
         description="Email address for sending email",
     )
-    EMAIL_PASSWORD: str = Field(
+    GMAIL_PASSWORD: str = Field(
         ...,
         description="Email password for sending email",
     )
@@ -47,6 +46,9 @@ class Settings(BaseSettings):
         case_sensitive=True,
         extra="ignore"
     )
+    # class Config:
+    #     env_file = ".env"
+    #     env_file_encoding = "utf-8"
 def get_settings() -> Settings:
     """
     Dependency function to retrieve
