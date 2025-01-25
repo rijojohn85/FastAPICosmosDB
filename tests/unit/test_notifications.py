@@ -25,7 +25,7 @@ async def test_provisioning_failure_sends_email(mocker: MockerFixture, client: T
     #Simulate failed provisioning request
     with patch("app.routers.cosmos_router.AzureCosmosManager", return_value=mock_manager):
         response: Response = client.post(
-            "/cosmos/create",
+            "/cosmos/accounts",
             json={
                 "account_name": "test-account",
                 "location" : "Central India",
@@ -64,7 +64,7 @@ async def test_provisioning_success_sends_email(mocker: MockerFixture, client: T
 
     with patch("app.routers.cosmos_router.AzureCosmosManager", return_value=mock_manager):
         response = client.post(
-            "/cosmos/create",
+            "/cosmos/accounts",
             json={
                 "account_name": "success-account",
                 "location": "Central India",

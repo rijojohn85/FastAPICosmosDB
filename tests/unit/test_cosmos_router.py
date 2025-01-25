@@ -51,7 +51,7 @@ def test_create_cosmos_account_async(mocker: MockerFixture) -> None:
     }
 
     # Act: Make the request
-    response: httpx.Response = client.post("/cosmos/create", json=test_payload)
+    response: httpx.Response = client.post("/cosmos/accounts", json=test_payload)
 
     # Assert: Check the response
     assert response.status_code == 202

@@ -38,7 +38,7 @@ async def get_cosmos_manager(settings: Annotated[Settings, Depends(get_settings)
 
 
 @router.post(
-    "/create",
+    "/accounts",
     status_code=status.HTTP_202_ACCEPTED,
     response_model=CosmosAccountStatusResponse,
     responses={
@@ -47,8 +47,8 @@ async def get_cosmos_manager(settings: Annotated[Settings, Depends(get_settings)
             "model": CosmosAccountStatusResponse
         },
         status.HTTP_400_BAD_REQUEST: {
-            "descriptions": "Invalid request parameters",
-            "model": ErrorResponse
+            "descriptions": "Invalid Account name",
+            "content": {"application/json": {"example": {"detail":"Invalid account name. Must be: ..."}}}
         }
     }
 )
@@ -78,6 +78,11 @@ async def create_cosmos_account(
         )
 
         return StatusTracker.get_status(request.account_name)
+        # return {
+        #     "status": CosmosAccountStatus.QUEUED,
+        #     "account_name": request.account_name,
+        #     "validation": "passed"
+        # }
     except ValueError as e:
         logger.error(str(e))
         StatusTracker.update_status(
@@ -252,3 +257,128 @@ Azure Portal Link: https://portal.azure.com/#resource/subscriptions/{settings.AZ
             )
     except Exception as email_error:
         logger.error(f"Failed to send success notification: {str(email_error)}")
+
+
+def send_deletion_success_email(
+        account_name: str,
+        settings: Settings
+) -> None:
+    """
+    Send success email notification with account details.
+
+    Args:
+        account_name: Provisioned account name
+        settings: Application configuration with email details
+    """
+    try:
+        with GmailSender(settings) as sender:
+            sender.send(
+                to=settings.GMAIL_ADDRESS,
+                subject=f"✅ Cosmos DB Account Deleted: {account_name}",
+                body=f"""Your Azure Cosmos DB account {account_name} has been successfully deleted."""
+            )
+    except Exception as email_error:
+        logger.error("EMail error: " + str(email_error))
+
+def send_deletion_failure_email(
+        account_name: str,
+        error_message: str,
+        settings: Settings
+) -> None:
+    """
+    Send failure email notification with account details.
+
+    Args:
+        account_name: Provisioned account name
+        error_message: Error message
+        settings: Application configuration with email details
+    """
+    try:
+        with GmailSender(settings) as sender:
+            sender.send(
+                to=settings.GMAIL_ADDRESS,
+                subject=f"❌ Cosmos DB Account Deletion Failed: {account_name}",
+                body=f"""Failed to delete Cosmos DB account {account_name}. Error: {error_message}"""
+            )
+    except Exception as email_error:
+        logger.error("EMail error: " + str(email_error))
+
+
+@router.delete(
+    "/accounts/{account_name}",
+    status_code=status.HTTP_204_NO_CONTENT
+    # responses={
+    #     status.HTTP_404_NOT_FOUND: {"model": ErrorResponse, "description": "Not found"},
+    #     status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorResponse, "description": "Internal Server Error"},
+    # }
+)
+async def delete_cosmos_account(
+        account_name: str,
+        background_tasks: BackgroundTasks,
+        manager: Annotated[AzureCosmosManager, Depends(get_cosmos_manager)],
+        settings: Annotated[Settings, Depends(get_settings)]) -> None:
+   """
+   Deletes a Cosmos DB account and sends appropriate notifications
+
+   Args:
+        account_name: Name of the account to delete
+        background_tasks: BackgroundTasks dependency
+        manager: Injected AzureCosmosManager dependency
+        settings: Injected Settings dependency
+    Raises:
+        HTTPException: If account does not exist or errors
+   """
+   try:
+        await manager.delete_account_async(account_name)
+        send_deletion_success_email(account_name, settings)
+   except ValueError as e:
+       #account does not exist
+        logger.error(str(e))
+        send_deletion_failure_email(
+                account_name,
+                str(e),
+           settings
+        )
+        raise HTTPException(
+              status_code=status.HTTP_404_NOT_FOUND,
+              detail={
+                "error_code": "ACCOUNT_NOT_FOUND",
+                "message": str(e),
+              }
+        )
+   except AzureError as e:
+         #Azure error
+         background_tasks.add_task(
+              send_deletion_failure_email,
+              account_name,
+              str(e),
+              settings
+         )
+         raise HTTPException(
+              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+              detail={
+                "error_code": "AZURE_ERROR",
+                "message": str(e),
+              }
+         )
+
+
+# async def execute_deletion(
+#         manager: AzureCosmosManager,
+#         account_name: str,
+#         settings: Settings
+# ) -> None:
+#     """Background task for actual deletion"""
+#     try:
+#         #1. perform actual deletion
+#         await manager.delete_account_async(account_name)
+#         send_deletion_success_email(account_name, settings)
+#     except Exception as e:
+#         send_deletion_failure_email(account_name, str(e), settings)
+#         raise HTTPException(
+#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+#             detail={
+#                 "error_code": "AZURE_ERROR",
+#                 "message": str(e),
+#             }
+#         ) from e
