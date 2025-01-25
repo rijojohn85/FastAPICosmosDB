@@ -2,7 +2,7 @@ from typing import Annotated
 from datetime import datetime
 
 from azure.core.exceptions import AzureError
-from fastapi import APIRouter, BackgroundTasks, status, HTTPException, Depends
+from fastapi import APIRouter, BackgroundTasks, status, HTTPException, Depends, Response
 from app.services.logging_service import logger
 
 from app.models.cosmos_models import (
@@ -306,10 +306,10 @@ def send_deletion_failure_email(
 
 @router.delete(
     "/accounts/{account_name}",
-    status_code=status.HTTP_204_NO_CONTENT
+    status_code=status.HTTP_204_NO_CONTENT,
     # responses={
-    #     status.HTTP_404_NOT_FOUND: {"model": ErrorResponse, "description": "Not found"},
-    #     status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorResponse, "description": "Internal Server Error"},
+    #     status.HTTP_404_NOT_FOUND: {"description": "Not found"},
+    #     status.HTTP_500_INTERNAL_SERVER_ERROR: { "description": "Internal Server Error"},
     # }
 )
 async def delete_cosmos_account(
@@ -331,6 +331,7 @@ async def delete_cosmos_account(
    try:
         await manager.delete_account_async(account_name)
         send_deletion_success_email(account_name, settings)
+        # return Response(status_code=status.HTTP_204_NO_CONTENT)
    except ValueError as e:
        #account does not exist
         logger.error(str(e))
@@ -348,11 +349,10 @@ async def delete_cosmos_account(
         )
    except AzureError as e:
          #Azure error
-         background_tasks.add_task(
-              send_deletion_failure_email,
-              account_name,
-              str(e),
-              settings
+         send_deletion_failure_email(
+             account_name,
+             str(e),
+             settings
          )
          raise HTTPException(
               status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

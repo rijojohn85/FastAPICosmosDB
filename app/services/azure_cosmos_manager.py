@@ -135,10 +135,10 @@ class AzureCosmosManager:
         #TODO
         pass
 
-    async def get_account_async(self, account_name: str)->Optional[DatabaseAccountGetResults]:
+    def get_account_async(self, account_name: str)->Optional[DatabaseAccountGetResults]:
         """Asynchronously retrieves an Azure Cosmos DB account."""
         try:
-            return await self.client.database_accounts.get(
+            return self.client.database_accounts.get(
                 self.resource_group,
                 account_name
             )
@@ -146,23 +146,28 @@ class AzureCosmosManager:
             logger.error(e)
             return None
 
-    async def account_exists(self, account_name:str)->bool:
+    def account_exists(self, account_name:str)->bool:
         """Checks if an account exists."""
-        account = await self.get_account_async(account_name)
+        account = self.get_account_async(account_name)
         return account is not None
 
     async def delete_account_async(self, account_name: str)->CosmosAccountStatusResponse:
         """Asynchronously deletes an Azure Cosmos DB account."""
-        if not await self.account_exists(account_name):
+        if not self.account_exists(account_name):
             raise ValueError(f"Account {account_name} does not exist.")
         try:
             #start async provisioning using thread pool executor
             poller = await asyncio.get_event_loop().run_in_executor(
+                # None,
+                # lambda: self.client.database_accounts.begin_delete(
+                #     resource_group_name=self.resource_group,
+                #     account_name=account_name,
+                # ),
                 None,
                 lambda: self.client.database_accounts.begin_delete(
                     resource_group_name=self.resource_group,
                     account_name=account_name,
-                )
+                ),
             )
             return self._create_status_response(
                 account_name,
