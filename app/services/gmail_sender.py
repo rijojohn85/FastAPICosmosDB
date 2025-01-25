@@ -2,6 +2,7 @@ from typing import Optional, Dict, Any
 import smtplib
 from email.message import EmailMessage
 from app.core.config.settings import Settings, get_settings
+from app.services.logging_service import logger
 
 class GmailSender:
     """
@@ -73,6 +74,7 @@ class GmailSender:
                 "recipients": [to]+ ([cc] if cc else []) + ([bcc] if bcc else [])
             }
         except smtplib.SMTPException as e:
+            logger.error(f"Failed to send email: {str(e)}")
             return {
                 "success": False,
                 "error": str(e)

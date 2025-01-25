@@ -1,13 +1,14 @@
-import os
+from typing import Annotated
+from datetime import datetime
+
 from azure.core.exceptions import AzureError
-from dotenv import load_dotenv
 from fastapi import APIRouter, BackgroundTasks, status, HTTPException, Depends
 from app.services.logging_service import logger
 
 from app.models.cosmos_models import (
-CreateCosmosAccountRequest,
-CosmosAccountStatusResponse,
-ErrorResponse
+    CreateCosmosAccountRequest,
+    CosmosAccountStatusResponse,
+    ErrorResponse
 )
 from app.services.azure_cosmos_manager import AzureCosmosManager
 from app.services.status_tracker import StatusTracker
@@ -23,27 +24,29 @@ router = APIRouter(
     }
 )
 
-load_dotenv()
-subscription_id = os.getenv("AZURE_SUBSCRIPTION_ID")
-resource_group = os.getenv("AZURE_RESOURCE_GROUP")
 
-def get_cosmos_manager() -> AzureCosmosManager:
+# load_dotenv()
+# subscription_id = os.getenv("AZURE_SUBSCRIPTION_ID")
+# resource_group = os.getenv("AZURE_RESOURCE_GROUP")
+
+async def get_cosmos_manager(settings: Annotated[Settings, Depends(get_settings)]) -> AzureCosmosManager:
     """Dependency that provides a configured AzureCosmosManager instance"""
     return AzureCosmosManager(
-        subscription_id=os.getenv("AZURE_SUBSCRIPTION_ID"),
-        resource_group=os.getenv("AZURE_RESOURCE_GROUP")
+        subscription_id=settings.AZURE_SUBSCRIPTION_ID,
+        resource_group=settings.AZURE_RESOURCE_GROUP
     )
+
 
 @router.post(
     "/create",
     status_code=status.HTTP_202_ACCEPTED,
     response_model=CosmosAccountStatusResponse,
     responses={
-        status.HTTP_202_ACCEPTED:{
+        status.HTTP_202_ACCEPTED: {
             "descriptions": "Provisioning request accepted",
             "model": CosmosAccountStatusResponse
         },
-        status.HTTP_400_BAD_REQUEST:{
+        status.HTTP_400_BAD_REQUEST: {
             "descriptions": "Invalid request parameters",
             "model": ErrorResponse
         }
@@ -52,16 +55,16 @@ def get_cosmos_manager() -> AzureCosmosManager:
 async def create_cosmos_account(
         request: CreateCosmosAccountRequest,
         background_tasks: BackgroundTasks,
-        manager: AzureCosmosManager = Depends(get_cosmos_manager)
-)->CosmosAccountStatusResponse:
+        manager: Annotated[AzureCosmosManager, Depends(get_cosmos_manager)],
+        settings: Annotated[Settings, Depends(get_settings)]
+) -> CosmosAccountStatusResponse:
     """EndPoint to initiate CosmosDB account provisioning"""
     try:
-        #set Initial status
+        # set Initial status
         # Set initial status
         StatusTracker.update_status(
-            request.account_name,
-            CosmosAccountStatus.QUEUED,
-            "Provisioning request received"
+            account_name=request.account_name,
+            status=CosmosAccountStatus.QUEUED,
         )
 
         # Start async provisioning
@@ -70,7 +73,8 @@ async def create_cosmos_account(
             manager,
             request.account_name,
             request.location,
-            request.api_type
+            request.api_type,
+            settings
         )
 
         return StatusTracker.get_status(request.account_name)
@@ -81,24 +85,31 @@ async def create_cosmos_account(
             status=CosmosAccountStatus.ERROR,
             message=str(e),
         )
-        #handle validation errors
+        # handle validation errors
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={
             "error_code": "VALIDATION_ERROR",
             "message": str(e),
-        },)
+        }, )
 
     except AzureError as e:
+        background_tasks.add_task(
+            send_failure_notification,
+            request.account_name,
+            str(e),
+            settings
+        )
         logger.error(str(e))
         StatusTracker.update_status(
             account_name=request.account_name,
             status=CosmosAccountStatus.ERROR,
             message=str(e),
         )
-        #handle azure specific errors
+        # handle azure specific errors
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={
             "error_code": "AZURE_ERROR",
             "message": str(e),
         })
+
 
 @router.get(
     "/accounts/{account_name}",
@@ -132,69 +143,112 @@ async def execute_provisioning(
         account_name: str,
         location: str,
         api_type: CosmosAPIType,
-)-> None:
+        settings: Settings,
+) -> None:
     """Background task for actual provisioning"""
     try:
-        #Update status to in-progress
+        # Update status to in-progress
         StatusTracker.update_status(
             account_name=account_name,
             status=CosmosAccountStatus.IN_PROGRESS,
             message="Resource provisioning started"
         )
-        #perform actual provisioning
+        #1. perform actual provisioning
         await manager.create_account_async(
             account_name=account_name,
             location=location,
             api_type=api_type,
         )
+        #2. Update status
         StatusTracker.update_status(
             account_name=account_name,
             status=CosmosAccountStatus.COMPLETED,
             message="Provisioning completed successfully"
         )
+        logger.info(StatusTracker.get_status(account_name))
+        #.3 Send success notification
+        send_success_notification(
+            account_name=account_name,
+            api_type=api_type,
+            location=location,
+            settings=settings
+        )
     except Exception as e:
         logger.error(str(e))
-        #update status on error
+        # update status on error
         StatusTracker.update_status(
             account_name=account_name,
             status=CosmosAccountStatus.ERROR,
             message=str(e),
         )
+        send_failure_notification(
+            account_name,
+            str(e),
+            settings
+        )
 
-async def handle_provisioning_failure(
-        account_name: str,
-        error: Exception,
-        background_tasks: BackgroundTasks,
-        settings: Settings = Depends(get_settings)
-)->None:
-    """Queue failure notification email on provisioning failure"""
-    background_tasks.add_task(
-        send_failure_notification,
-        account_name,
-        str(error),
-        settings
-    )
+
 
 def send_failure_notification(
         account_name: str,
         error_message: str,
         settings: Settings
-)->None:
+) -> None:
     """Send email notification on provisioning failure"""
     try:
         with GmailSender(settings) as email_sender:
             email_sender.send(
                 to=settings.GMAIL_ADDRESS,
                 subject=f"Provisioning failed for {account_name}",
-                body=f"""CosmosDB account provisioning faile:
+                body=f"""CosmosDB account provisioning failed:
                 Account Name: {account_name}
                 Error: {error_message}
                 Required Action:
                 1. Check Azure portal for resource status.
                 2. Check detail.log file for errors
                 3. Review account name availability
-                4. Ensure location selected is avaialble for your account at this time.
+                4. Ensure location selected is available for your account at this time.
                 Provisioning failed for {account_name} with error: {error_message}"""
             )
     except Exception as e:
         logger.error(f"Email notification failed: {str(e)}")
+
+
+def send_success_notification(
+        account_name: str,
+        api_type: CosmosAPIType,
+        location: str,
+        settings: Settings
+) -> None:
+    """
+    Send success email notification with account details.
+
+    Args:
+        account_name: Provisioned account name
+        api_type: Cosmos DB API type used
+        location: Azure region where account was created
+        settings: Application configuration with email details
+    """
+    try:
+        with GmailSender(settings) as sender:
+            sender.send(
+                to=settings.GMAIL_ADDRESS,
+                subject=f"✅ Cosmos DB Account Ready: {account_name}",
+                body=f"""Your Azure Cosmos DB account has been successfully provisioned!
+
+Account Details:
+• Name: {account_name}
+• API Type: {api_type.value}
+• Location: {location}
+• Provisioning Time: {datetime.now().strftime("%Y-%m-%d %H:%M UTC")}
+
+Next Steps:
+1. Create databases and containers
+2. Configure access policies
+3. Connect using connection strings
+
+Azure Portal Link: https://portal.azure.com/#resource/subscriptions/{settings.AZURE_SUBSCRIPTION_ID}/resourceGroups/{settings.AZURE_RESOURCE_GROUP}/providers/Microsoft.DocumentDB/databaseAccounts/{account_name}
+"""
+            )
+    except Exception as email_error:
+        logger.error(f"Failed to send success notification: {str(email_error)}")
