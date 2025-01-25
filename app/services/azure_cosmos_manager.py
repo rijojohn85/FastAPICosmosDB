@@ -65,7 +65,7 @@ class AzureCosmosManager:
             account_name:str,
             status: CosmosAccountStatus,
             resp_message: Optional[str]=None) -> CosmosAccountStatusResponse:
-        """Creates a standarized CosmosDB status response."""
+        """Creates a standardized CosmosDB status response."""
         now = datetime.now()
         return CosmosAccountStatusResponse(
             account_name=account_name,
@@ -83,7 +83,7 @@ class AzureCosmosManager:
         """Asynchronously provisions a new Azure Cosmos DB account.
         Args:
             account_name: Globally unique name of the Azure Cosmos DB account.(3-44 lowercase alphanumeric chars)
-            location: Azure region (e.g., 'eastus')
+            location: Azure region (e.g., 'Central India')
             api_type: CosmosDB API type
         Returns:
             Status response with provisioning state
@@ -126,14 +126,6 @@ class AzureCosmosManager:
                 CosmosAccountStatus.ERROR,
                f"Azure Error: {str(err)}"
             )
-    async def _send_notification(
-            self,
-            email: str,
-            status: str
-    )-> None:
-        """Send email"""
-        #TODO
-        pass
 
     def get_account_async(self, account_name: str)->Optional[DatabaseAccountGetResults]:
         """Asynchronously retrieves an Azure Cosmos DB account."""
