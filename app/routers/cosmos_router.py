@@ -16,7 +16,8 @@ from app.services.status_tracker import StatusTracker
 from app.models.custom_types import CosmosAPIType, CosmosAccountStatus
 from app.services.gmail_sender import GmailSender
 from app.core.config.settings import get_settings, Settings
-
+import asyncio
+from azure.core.polling import AsyncLROPoller
 router = APIRouter(
     prefix="/cosmos",
     tags=["cosmosdb"],
@@ -62,7 +63,6 @@ async def create_cosmos_account(
     """EndPoint to initiate CosmosDB account provisioning"""
     try:
         # set Initial status
-        # Set initial status
         StatusTracker.update_status(
             account_name=request.account_name,
             status=CosmosAccountStatus.QUEUED,
@@ -79,11 +79,6 @@ async def create_cosmos_account(
         )
 
         return StatusTracker.get_status(request.account_name)
-        # return {
-        #     "status": CosmosAccountStatus.QUEUED,
-        #     "account_name": request.account_name,
-        #     "validation": "passed"
-        # }
     except ValueError as e:
         logger.error(str(e))
         StatusTracker.update_status(
@@ -176,10 +171,14 @@ async def execute_provisioning(
             message="Resource provisioning started"
         )
         #1. perform actual provisioning
-        await manager.create_account_async(
+        poller: AsyncLROPoller = await manager.create_account_async(
             account_name=account_name,
             location=location,
             api_type=api_type,
+        )
+        await asyncio.get_event_loop().run_in_executor(
+            None,
+            poller.result,
         )
         #2. Update status
         StatusTracker.update_status(
@@ -187,13 +186,12 @@ async def execute_provisioning(
             status=CosmosAccountStatus.COMPLETED,
             message="Provisioning completed successfully"
         )
-        logger.info(StatusTracker.get_status(account_name))
-        #.3 Send success notification
+        #3. Send email
         send_success_notification(
-            account_name=account_name,
-            api_type=api_type,
-            location=location,
-            settings=settings
+            account_name,
+            api_type,
+            location,
+            get_settings()
         )
     except Exception as e:
         logger.error(str(e))
@@ -231,38 +229,6 @@ def send_failure_notification(
 
 
 
-def send_success_notification(
-        account_name: str,
-        api_type: CosmosAPIType,
-        location: str,
-        settings: Settings
-) -> None:
-    """
-    Send success email notification with account details.
-
-    Args:
-        account_name: Provisioned account name
-        api_type: Cosmos DB API type used
-        location: Azure region where account was created
-        settings: Application configuration with email details
-    """
-    subject =  f"✅ Cosmos DB Account Ready: {account_name}"
-    body=f"""Your Azure Cosmos DB account has been successfully provisioned!
-
-            Account Details:
-            • Name: {account_name}
-            • API Type: {api_type.value}
-            • Location: {location}
-            • Provisioning Time: {datetime.now().strftime("%Y-%m-%d %H:%M UTC")}
-
-            Next Steps:
-            1. Create databases and containers
-            2. Configure access policies
-            3. Connect using connection strings
-
-            Azure Portal Link: https://portal.azure.com/#resource/subscriptions/{settings.AZURE_SUBSCRIPTION_ID}/resourceGroups/{settings.AZURE_RESOURCE_GROUP}/providers/Microsoft.DocumentDB/databaseAccounts/{account_name}
-            """
-    send_email(account_name, subject, body, settings)
 
 
 def send_deletion_success_email(
@@ -375,3 +341,35 @@ async def delete_cosmos_account(
                 "message": str(e),
               }
          )
+def send_success_notification(
+        account_name: str,
+        api_type: CosmosAPIType,
+        location: str,
+        settings: Settings
+) -> None:
+    """
+    Send success email notification with account details.
+
+    Args:
+        account_name: Provisioned account name
+        api_type: Cosmos DB API type used
+        location: Azure region where account was created
+        settings: Application configuration with email details
+    """
+    subject =  f"✅ Cosmos DB Account Ready: {account_name}"
+    body=f"""Your Azure Cosmos DB account has been successfully provisioned!
+
+            Account Details:
+            • Name: {account_name}
+            • API Type: {api_type.value}
+            • Location: {location}
+            • Provisioning Time: {datetime.now().strftime("%Y-%m-%d %H:%M UTC")}
+
+            Next Steps:
+            1. Create databases and containers
+            2. Configure access policies
+            3. Connect using connection strings
+
+            Azure Portal Link: https://portal.azure.com/#resource/subscriptions/{settings.AZURE_SUBSCRIPTION_ID}/resourceGroups/{settings.AZURE_RESOURCE_GROUP}/providers/Microsoft.DocumentDB/databaseAccounts/{account_name}
+            """
+    send_email(account_name, subject, body, settings)

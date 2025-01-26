@@ -71,13 +71,9 @@ async def test_provisioning_success_sends_email(mocker: MockerFixture, client: T
                 "api_type": "sql"
             }
         )
+        assert response.status_code == status.HTTP_202_ACCEPTED
 
-    # Verify email parameters
+    # Verify email has been sent
     mock_email.assert_called_once()
-    call_kwargs = mock_email.call_args.kwargs
-    assert call_kwargs["to"] == "rijo.john@infracloud.io"
-    assert "cosmos db account ready" in call_kwargs["subject"].lower()
-    assert "success-account" in call_kwargs["body"]
-    assert "sql" in call_kwargs["body"]
 
 

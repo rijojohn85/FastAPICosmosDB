@@ -47,7 +47,7 @@ def test_create_cosmos_account_async() -> None:
         # test payload
 
         test_payload: Dict[str, str] = {
-            "account_name": "test_account",
+            "account_name": "test-account",
             "location": "Central India",
             "api_type": "sql",
         }
@@ -60,12 +60,12 @@ def test_create_cosmos_account_async() -> None:
 
         # Check the response body
         response_data: Dict[str, Any] = response.json()
-        assert response_data["account_name"] == "test_account"
+        assert response_data["account_name"] == "test-account"
         assert response_data["status"] == CosmosAccountStatus.QUEUED
 
         # Verify async method was called with correct parameters
         mock_async_method.assert_awaited_once_with(
-            account_name="test_account",
+            account_name="test-account",
             location="Central India",
             api_type=   CosmosAPIType.SQL
         )

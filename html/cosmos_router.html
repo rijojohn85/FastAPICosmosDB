@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.5">
+<title>cosmos_router API documentation</title>
+<meta name="description" content="">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>cosmos_router</code></h1>
+</header>
+<section id="section-intro">
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="cosmos_router.create_cosmos_account"><code class="name flex">
+<span>async def <span class="ident">create_cosmos_account</span></span>(<span>request: app.models.cosmos_models.CreateCosmosAccountRequest,<br>background_tasks: fastapi.background.BackgroundTasks,<br>manager: Annotated[app.services.azure_cosmos_manager.AzureCosmosManager, Depends(<a title="cosmos_router.get_cosmos_manager" href="#cosmos_router.get_cosmos_manager">get_cosmos_manager()</a>)],<br>settings: Annotated[app.core.config.settings.Settings, Depends(get_settings)]) ‑> app.models.cosmos_models.CosmosAccountStatusResponse</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@router.post(
+    &#34;/accounts&#34;,
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=CosmosAccountStatusResponse,
+    responses={
+        status.HTTP_202_ACCEPTED: {
+            &#34;descriptions&#34;: &#34;Provisioning request accepted&#34;,
+            &#34;model&#34;: CosmosAccountStatusResponse
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            &#34;descriptions&#34;: &#34;Invalid Account name&#34;,
+            &#34;content&#34;: {&#34;application/json&#34;: {&#34;example&#34;: {&#34;detail&#34;:&#34;Invalid account name. Must be: ...&#34;}}}
+        }
+    }
+)
+async def create_cosmos_account(
+        request: CreateCosmosAccountRequest,
+        background_tasks: BackgroundTasks,
+        manager: Annotated[AzureCosmosManager, Depends(get_cosmos_manager)],
+        settings: Annotated[Settings, Depends(get_settings)]
+) -&gt; CosmosAccountStatusResponse:
+    &#34;&#34;&#34;EndPoint to initiate CosmosDB account provisioning&#34;&#34;&#34;
+    try:
+        # set Initial status
+        StatusTracker.update_status(
+            account_name=request.account_name,
+            status=CosmosAccountStatus.QUEUED,
+        )
+
+        # Start async provisioning
+        background_tasks.add_task(
+            execute_provisioning,
+            manager,
+            request.account_name,
+            request.location,
+            request.api_type,
+            settings
+        )
+
+        return StatusTracker.get_status(request.account_name)
+    except ValueError as e:
+        logger.error(str(e))
+        StatusTracker.update_status(
+            account_name=request.account_name,
+            status=CosmosAccountStatus.ERROR,
+            message=str(e),
+        )
+        # handle validation errors
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={
+            &#34;error_code&#34;: &#34;VALIDATION_ERROR&#34;,
+            &#34;message&#34;: str(e),
+        }, )
+
+    except AzureError as e:
+        background_tasks.add_task(
+            send_failure_notification,
+            request.account_name,
+            str(e),
+            settings
+        )
+        logger.error(str(e))
+        StatusTracker.update_status(
+            account_name=request.account_name,
+            status=CosmosAccountStatus.ERROR,
+            message=str(e),
+        )
+        # handle azure specific errors
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={
+            &#34;error_code&#34;: &#34;AZURE_ERROR&#34;,
+            &#34;message&#34;: str(e),
+        })
+    except Exception as e:
+        background_tasks.add_task(
+            send_failure_notification,
+            request.account_name,
+            str(e),
+            settings
+        )
+        logger.error(str(e))
+        StatusTracker.update_status(
+            account_name=request.account_name,
+            status=CosmosAccountStatus.ERROR,
+            message=str(e),
+        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={
+            &#34;error_code&#34;: &#34;INTERNAL_ERROR&#34;+&#34; &#34;+str(e),
+        })</code></pre>
+</details>
+<div class="desc"><p>EndPoint to initiate CosmosDB account provisioning</p></div>
+</dd>
+<dt id="cosmos_router.delete_cosmos_account"><code class="name flex">
+<span>async def <span class="ident">delete_cosmos_account</span></span>(<span>account_name: str,<br>background_tasks: fastapi.background.BackgroundTasks,<br>manager: Annotated[app.services.azure_cosmos_manager.AzureCosmosManager, Depends(<a title="cosmos_router.get_cosmos_manager" href="#cosmos_router.get_cosmos_manager">get_cosmos_manager()</a>)],<br>settings: Annotated[app.core.config.settings.Settings, Depends(get_settings)]) ‑> None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@router.delete(
+    &#34;/accounts/{account_name}&#34;,
+    status_code=status.HTTP_204_NO_CONTENT,
+    # responses={
+    #     status.HTTP_404_NOT_FOUND: {&#34;description&#34;: &#34;Not found&#34;},
+    #     status.HTTP_500_INTERNAL_SERVER_ERROR: { &#34;description&#34;: &#34;Internal Server Error&#34;},
+    # }
+)
+async def delete_cosmos_account(
+        account_name: str,
+        background_tasks: BackgroundTasks,
+        manager: Annotated[AzureCosmosManager, Depends(get_cosmos_manager)],
+        settings: Annotated[Settings, Depends(get_settings)]) -&gt; None:
+   &#34;&#34;&#34;
+   Deletes a Cosmos DB account and sends appropriate notifications
+
+   Args:
+        account_name: Name of the account to delete
+        background_tasks: BackgroundTasks dependency
+        manager: Injected AzureCosmosManager dependency
+        settings: Injected Settings dependency
+    Raises:
+        HTTPException: If account does not exist or errors
+   &#34;&#34;&#34;
+   try:
+        StatusTracker.update_status(
+          account_name=account_name,
+          status=CosmosAccountStatus.QUEUED,
+            message=&#34;Deletion Initiated&#34;
+        )
+        await manager.delete_account_async(account_name)
+        send_deletion_success_email(account_name, settings)
+   except ValueError as e:
+       #account does not exist
+        StatusTracker.update_status(
+            account_name=account_name,
+            status=CosmosAccountStatus.ERROR,
+            message=&#34;Account not found&#34;
+        )
+        send_deletion_failure_email(
+                account_name,
+                str(e),
+           settings
+        )
+        raise HTTPException(
+              status_code=status.HTTP_404_NOT_FOUND,
+              detail={
+                &#34;error_code&#34;: &#34;ACCOUNT_NOT_FOUND&#34;,
+                &#34;message&#34;: str(e),
+              }
+        )
+   except AzureError as e:
+         #Azure error
+         send_deletion_failure_email(
+             account_name,
+             str(e),
+             settings
+         )
+         raise HTTPException(
+              status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+              detail={
+                &#34;error_code&#34;: &#34;AZURE_ERROR&#34;,
+                &#34;message&#34;: str(e),
+              }
+         )</code></pre>
+</details>
+<div class="desc"><p>Deletes a Cosmos DB account and sends appropriate notifications</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>account_name</code></strong></dt>
+<dd>Name of the account to delete</dd>
+<dt><strong><code>background_tasks</code></strong></dt>
+<dd>BackgroundTasks dependency</dd>
+<dt><strong><code>manager</code></strong></dt>
+<dd>Injected AzureCosmosManager dependency</dd>
+<dt><strong><code>settings</code></strong></dt>
+<dd>Injected Settings dependency</dd>
+</dl>
+<p>Raises:
+HTTPException: If account does not exist or errors</p></div>
+</dd>
+<dt id="cosmos_router.execute_provisioning"><code class="name flex">
+<span>async def <span class="ident">execute_provisioning</span></span>(<span>manager: app.services.azure_cosmos_manager.AzureCosmosManager,<br>account_name: str,<br>location: str,<br>api_type: app.models.custom_types.CosmosAPIType,<br>settings: app.core.config.settings.Settings) ‑> None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def execute_provisioning(
+        manager: AzureCosmosManager,
+        account_name: str,
+        location: str,
+        api_type: CosmosAPIType,
+        settings: Settings,
+) -&gt; None:
+    &#34;&#34;&#34;Background task for actual provisioning&#34;&#34;&#34;
+    try:
+        # Update status to in-progress
+        StatusTracker.update_status(
+            account_name=account_name,
+            status=CosmosAccountStatus.IN_PROGRESS,
+            message=&#34;Resource provisioning started&#34;
+        )
+        #1. perform actual provisioning
+        poller: AsyncLROPoller = await manager.create_account_async(
+            account_name=account_name,
+            location=location,
+            api_type=api_type,
+        )
+        await asyncio.get_event_loop().run_in_executor(
+            None,
+            poller.result,
+        )
+        #2. Update status
+        StatusTracker.update_status(
+            account_name=account_name,
+            status=CosmosAccountStatus.COMPLETED,
+            message=&#34;Provisioning completed successfully&#34;
+        )
+        #3. Send email
+        send_success_notification(
+            account_name,
+            api_type,
+            location,
+            get_settings()
+        )
+    except Exception as e:
+        logger.error(str(e))
+        # update status on error
+        StatusTracker.update_status(
+            account_name=account_name,
+            status=CosmosAccountStatus.ERROR,
+            message=str(e),
+        )
+        send_failure_notification(
+            account_name,
+            str(e),
+            settings
+        )</code></pre>
+</details>
+<div class="desc"><p>Background task for actual provisioning</p></div>
+</dd>
+<dt id="cosmos_router.get_cosmos_manager"><code class="name flex">
+<span>async def <span class="ident">get_cosmos_manager</span></span>(<span>settings: Annotated[app.core.config.settings.Settings, Depends(get_settings)]) ‑> app.services.azure_cosmos_manager.AzureCosmosManager</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_cosmos_manager(settings: Annotated[Settings, Depends(get_settings)]) -&gt; AzureCosmosManager:
+    &#34;&#34;&#34;Dependency that provides a configured AzureCosmosManager instance&#34;&#34;&#34;
+    return AzureCosmosManager(
+        subscription_id=settings.AZURE_SUBSCRIPTION_ID,
+        resource_group=settings.AZURE_RESOURCE_GROUP
+    )</code></pre>
+</details>
+<div class="desc"><p>Dependency that provides a configured AzureCosmosManager instance</p></div>
+</dd>
+<dt id="cosmos_router.get_provisioning_status"><code class="name flex">
+<span>async def <span class="ident">get_provisioning_status</span></span>(<span>account_name: str) ‑> app.models.cosmos_models.CosmosAccountStatusResponse</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@router.get(
+    &#34;/accounts/{account_name}&#34;,
+    response_model=CosmosAccountStatusResponse,
+    responses={
+        status.HTTP_404_NOT_FOUND: {&#34;model&#34;: ErrorResponse, &#34;description&#34;: &#34;Not found&#34;},
+    }
+)
+async def get_provisioning_status(
+        account_name: str,
+) -&gt; CosmosAccountStatusResponse:
+    &#34;&#34;&#34;
+    Get current provisioning status of CosmosDB account
+    Args:
+        account_name: CosmosDB account name
+
+    Returns:
+        Current provisioning status and details
+    &#34;&#34;&#34;
+    account_status = StatusTracker.get_status(account_name)
+    if account_status is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail={
+            &#34;error_code&#34;: &#34;ACCOUNT_NOT_FOUND&#34;,
+            &#34;message&#34;: f&#34;Provisioning for CosmosDB account {account_name} not found&#34;,
+        })
+    return account_status</code></pre>
+</details>
+<div class="desc"><p>Get current provisioning status of CosmosDB account</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>account_name</code></strong></dt>
+<dd>CosmosDB account name</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Current provisioning status and details</p></div>
+</dd>
+<dt id="cosmos_router.send_deletion_failure_email"><code class="name flex">
+<span>def <span class="ident">send_deletion_failure_email</span></span>(<span>account_name: str,<br>error_message: str,<br>settings: app.core.config.settings.Settings) ‑> None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_deletion_failure_email(
+        account_name: str,
+        error_message: str,
+        settings: Settings
+) -&gt; None:
+    &#34;&#34;&#34;
+    Send failure email notification with account details.
+
+    Args:
+        account_name: Provisioned account name
+        error_message: Error message
+        settings: Application configuration with email details
+    &#34;&#34;&#34;
+    try:
+        with GmailSender(settings) as sender:
+            sender.send(
+                to=settings.GMAIL_ADDRESS,
+                subject=f&#34;❌ Cosmos DB Account Deletion Failed: {account_name}&#34;,
+                body=f&#34;&#34;&#34;Failed to delete Cosmos DB account {account_name}. Error: {error_message}&#34;&#34;&#34;
+            )
+    except Exception as email_error:
+        logger.error(&#34;EMail error: &#34; + str(email_error))</code></pre>
+</details>
+<div class="desc"><p>Send failure email notification with account details.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>account_name</code></strong></dt>
+<dd>Provisioned account name</dd>
+<dt><strong><code>error_message</code></strong></dt>
+<dd>Error message</dd>
+<dt><strong><code>settings</code></strong></dt>
+<dd>Application configuration with email details</dd>
+</dl></div>
+</dd>
+<dt id="cosmos_router.send_deletion_success_email"><code class="name flex">
+<span>def <span class="ident">send_deletion_success_email</span></span>(<span>account_name: str, settings: app.core.config.settings.Settings) ‑> None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_deletion_success_email(
+        account_name: str,
+        settings: Settings
+) -&gt; None:
+    &#34;&#34;&#34;
+    Send success email notification with account details.
+
+    Args:
+        account_name: Provisioned account name
+        settings: Application configuration with email details
+    &#34;&#34;&#34;
+    try:
+        with GmailSender(settings) as sender:
+            sender.send(
+                to=settings.GMAIL_ADDRESS,
+                subject=f&#34;✅ Cosmos DB Account Deleted: {account_name}&#34;,
+                body=f&#34;&#34;&#34;Your Azure Cosmos DB account {account_name} has been successfully deleted.&#34;&#34;&#34;
+            )
+    except Exception as email_error:
+        logger.error(&#34;EMail error: &#34; + str(email_error))</code></pre>
+</details>
+<div class="desc"><p>Send success email notification with account details.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>account_name</code></strong></dt>
+<dd>Provisioned account name</dd>
+<dt><strong><code>settings</code></strong></dt>
+<dd>Application configuration with email details</dd>
+</dl></div>
+</dd>
+<dt id="cosmos_router.send_failure_notification"><code class="name flex">
+<span>def <span class="ident">send_failure_notification</span></span>(<span>account_name: str,<br>error_message: str,<br>settings: app.core.config.settings.Settings) ‑> None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_failure_notification(
+        account_name: str,
+        error_message: str,
+        settings: Settings
+) -&gt; None:
+    &#34;&#34;&#34;Send email notification on provisioning failure&#34;&#34;&#34;
+    subject:str = f&#34;Provisioning failed for {account_name}&#34;
+    body: str= f&#34;&#34;&#34;CosmosDB account provisioning failed:
+                Account Name: {account_name}
+                Error: {error_message}
+                Required Action:
+                1. Check Azure portal for resource status.
+                2. Check detail.log file for errors
+                3. Review account name availability
+                4. Ensure location selected is available for your account at this time.
+                Provisioning failed for {account_name} with error: {error_message}&#34;&#34;&#34;
+    send_email(account_name, subject, body, settings)</code></pre>
+</details>
+<div class="desc"><p>Send email notification on provisioning failure</p></div>
+</dd>
+<dt id="cosmos_router.send_success_notification"><code class="name flex">
+<span>def <span class="ident">send_success_notification</span></span>(<span>account_name: str,<br>api_type: app.models.custom_types.CosmosAPIType,<br>location: str,<br>settings: app.core.config.settings.Settings) ‑> None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_success_notification(
+        account_name: str,
+        api_type: CosmosAPIType,
+        location: str,
+        settings: Settings
+) -&gt; None:
+    &#34;&#34;&#34;
+    Send success email notification with account details.
+
+    Args:
+        account_name: Provisioned account name
+        api_type: Cosmos DB API type used
+        location: Azure region where account was created
+        settings: Application configuration with email details
+    &#34;&#34;&#34;
+    subject =  f&#34;✅ Cosmos DB Account Ready: {account_name}&#34;
+    body=f&#34;&#34;&#34;Your Azure Cosmos DB account has been successfully provisioned!
+
+            Account Details:
+            • Name: {account_name}
+            • API Type: {api_type.value}
+            • Location: {location}
+            • Provisioning Time: {datetime.now().strftime(&#34;%Y-%m-%d %H:%M UTC&#34;)}
+
+            Next Steps:
+            1. Create databases and containers
+            2. Configure access policies
+            3. Connect using connection strings
+
+            Azure Portal Link: https://portal.azure.com/#resource/subscriptions/{settings.AZURE_SUBSCRIPTION_ID}/resourceGroups/{settings.AZURE_RESOURCE_GROUP}/providers/Microsoft.DocumentDB/databaseAccounts/{account_name}
+            &#34;&#34;&#34;
+    send_email(account_name, subject, body, settings)</code></pre>
+</details>
+<div class="desc"><p>Send success email notification with account details.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>account_name</code></strong></dt>
+<dd>Provisioned account name</dd>
+<dt><strong><code>api_type</code></strong></dt>
+<dd>Cosmos DB API type used</dd>
+<dt><strong><code>location</code></strong></dt>
+<dd>Azure region where account was created</dd>
+<dt><strong><code>settings</code></strong></dt>
+<dd>Application configuration with email details</dd>
+</dl></div>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="cosmos_router.create_cosmos_account" href="#cosmos_router.create_cosmos_account">create_cosmos_account</a></code></li>
+<li><code><a title="cosmos_router.delete_cosmos_account" href="#cosmos_router.delete_cosmos_account">delete_cosmos_account</a></code></li>
+<li><code><a title="cosmos_router.execute_provisioning" href="#cosmos_router.execute_provisioning">execute_provisioning</a></code></li>
+<li><code><a title="cosmos_router.get_cosmos_manager" href="#cosmos_router.get_cosmos_manager">get_cosmos_manager</a></code></li>
+<li><code><a title="cosmos_router.get_provisioning_status" href="#cosmos_router.get_provisioning_status">get_provisioning_status</a></code></li>
+<li><code><a title="cosmos_router.send_deletion_failure_email" href="#cosmos_router.send_deletion_failure_email">send_deletion_failure_email</a></code></li>
+<li><code><a title="cosmos_router.send_deletion_success_email" href="#cosmos_router.send_deletion_success_email">send_deletion_success_email</a></code></li>
+<li><code><a title="cosmos_router.send_failure_notification" href="#cosmos_router.send_failure_notification">send_failure_notification</a></code></li>
+<li><code><a title="cosmos_router.send_success_notification" href="#cosmos_router.send_success_notification">send_success_notification</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
+</footer>
+</body>
+</html>

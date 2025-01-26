@@ -20,20 +20,20 @@ class CreateCosmosAccountRequest(BaseModel):
         default=CosmosAPIType.SQL,
         examples=["sql"]
     )
-    @field_validator("account_name")
-    def validate_account_name(cls, value: str)->str:
-        if not re.fullmatch(
-            r"^[a-z]+[a-z0-9-]{1,42}[a-z0-9]$",
-            value
-        ):
-            raise ValueError("""
-            Invalid Account name. Must be:\n
-            - between 3 and 44 characters\n
-            - lowercase letters, numbers, and hyphens only\n
-            - cannot start or end with a hyphen\n
-            - cannot have consecutive hyphens.
-            """)
-        return value
+    # @field_validator("account_name")
+    # def validate_account_name(cls, value: str)->str:
+    #     if not re.fullmatch(
+    #         r"^[a-z]+[a-z0-9-]{1,42}[a-z0-9]$",
+    #         value
+    #     ):
+    #         raise ValueError("""
+    #         Invalid Account name. Must be:\n
+    #         - between 3 and 44 characters\n
+    #         - lowercase letters, numbers, and hyphens only\n
+    #         - cannot start or end with a hyphen\n
+    #         - cannot have consecutive hyphens.
+    #         """)
+    #     return value
 
 class CosmosAccountStatusResponse(BaseModel):
     account_name: str

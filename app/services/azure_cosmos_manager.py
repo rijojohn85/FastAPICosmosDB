@@ -1,7 +1,6 @@
 import asyncio
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Annotated
 from datetime import datetime
-
 from azure.core.polling import AsyncLROPoller
 
 from app.services.logging_service import logger
@@ -21,6 +20,8 @@ from azure.core.exceptions import AzureError
 
 from app.models.custom_types import CosmosAPIType, CosmosAccountStatus
 from app.models.cosmos_models import CosmosAccountStatusResponse
+from app.services.status_tracker import StatusTracker
+
 
 class AzureCosmosManager:
     """Manages Azure Cosmos DB account lifecycle operations with async support.
@@ -79,14 +80,12 @@ class AzureCosmosManager:
             account_name: str,
             location: str,
             api_type: CosmosAPIType,
-    ) -> CosmosAccountStatusResponse:
+    )->AsyncLROPoller[None]:
         """Asynchronously provisions a new Azure Cosmos DB account.
         Args:
             account_name: Globally unique name of the Azure Cosmos DB account.(3-44 lowercase alphanumeric chars)
             location: Azure region (e.g., 'Central India')
             api_type: CosmosDB API type
-        Returns:
-            Status response with provisioning state
         Raises:
             AzureError: If Azure SDK operation fails
         """
@@ -106,7 +105,7 @@ class AzureCosmosManager:
                 api_properties=self._get_api_properties(api_type),
             )
             #start async provisioning using thread pool executor
-            poller = await asyncio.get_event_loop().run_in_executor(
+            return await asyncio.get_event_loop().run_in_executor(
                 None,
                 lambda: self.client.database_accounts.begin_create_or_update(
                     resource_group_name=self.resource_group,
@@ -114,18 +113,10 @@ class AzureCosmosManager:
                     create_update_parameters=create_params,
                 )
             )
-            return self._create_status_response(
-                account_name,
-                CosmosAccountStatus.QUEUED,
-                "Provisioning Initiated"
-            )
+
         except AzureError as err:
             logger.error(err.message)
-            return self._create_status_response(
-                account_name,
-                CosmosAccountStatus.ERROR,
-               f"Azure Error: {str(err)}"
-            )
+            raise Exception(">>> Error: " + str(err) + " <<<")
 
     def get_account_async(self, account_name: str)->Optional[DatabaseAccountGetResults]:
         """Asynchronously retrieves an Azure Cosmos DB account."""
@@ -150,11 +141,6 @@ class AzureCosmosManager:
         try:
             #start async provisioning using thread pool executor
             poller = await asyncio.get_event_loop().run_in_executor(
-                # None,
-                # lambda: self.client.database_accounts.begin_delete(
-                #     resource_group_name=self.resource_group,
-                #     account_name=account_name,
-                # ),
                 None,
                 lambda: self.client.database_accounts.begin_delete(
                     resource_group_name=self.resource_group,
