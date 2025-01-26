@@ -4,6 +4,7 @@ from datetime import datetime
 from azure.core.exceptions import AzureError
 from fastapi import APIRouter, BackgroundTasks, status, HTTPException, Depends, Response
 from app.services.logging_service import logger
+from app.services.email_service import send_email
 
 from app.models.cosmos_models import (
     CreateCosmosAccountRequest,
@@ -200,12 +201,8 @@ def send_failure_notification(
         settings: Settings
 ) -> None:
     """Send email notification on provisioning failure"""
-    try:
-        with GmailSender(settings) as email_sender:
-            email_sender.send(
-                to=settings.GMAIL_ADDRESS,
-                subject=f"Provisioning failed for {account_name}",
-                body=f"""CosmosDB account provisioning failed:
+    subject:str = f"Provisioning failed for {account_name}"
+    body: str= f"""CosmosDB account provisioning failed:
                 Account Name: {account_name}
                 Error: {error_message}
                 Required Action:
@@ -214,9 +211,8 @@ def send_failure_notification(
                 3. Review account name availability
                 4. Ensure location selected is available for your account at this time.
                 Provisioning failed for {account_name} with error: {error_message}"""
-            )
-    except Exception as e:
-        logger.error(f"Email notification failed: {str(e)}")
+    send_email(account_name, subject, body, settings)
+
 
 
 def send_success_notification(
@@ -234,29 +230,23 @@ def send_success_notification(
         location: Azure region where account was created
         settings: Application configuration with email details
     """
-    try:
-        with GmailSender(settings) as sender:
-            sender.send(
-                to=settings.GMAIL_ADDRESS,
-                subject=f"✅ Cosmos DB Account Ready: {account_name}",
-                body=f"""Your Azure Cosmos DB account has been successfully provisioned!
+    subject =  f"✅ Cosmos DB Account Ready: {account_name}"
+    body=f"""Your Azure Cosmos DB account has been successfully provisioned!
 
-Account Details:
-• Name: {account_name}
-• API Type: {api_type.value}
-• Location: {location}
-• Provisioning Time: {datetime.now().strftime("%Y-%m-%d %H:%M UTC")}
+            Account Details:
+            • Name: {account_name}
+            • API Type: {api_type.value}
+            • Location: {location}
+            • Provisioning Time: {datetime.now().strftime("%Y-%m-%d %H:%M UTC")}
 
-Next Steps:
-1. Create databases and containers
-2. Configure access policies
-3. Connect using connection strings
+            Next Steps:
+            1. Create databases and containers
+            2. Configure access policies
+            3. Connect using connection strings
 
-Azure Portal Link: https://portal.azure.com/#resource/subscriptions/{settings.AZURE_SUBSCRIPTION_ID}/resourceGroups/{settings.AZURE_RESOURCE_GROUP}/providers/Microsoft.DocumentDB/databaseAccounts/{account_name}
-"""
-            )
-    except Exception as email_error:
-        logger.error(f"Failed to send success notification: {str(email_error)}")
+            Azure Portal Link: https://portal.azure.com/#resource/subscriptions/{settings.AZURE_SUBSCRIPTION_ID}/resourceGroups/{settings.AZURE_RESOURCE_GROUP}/providers/Microsoft.DocumentDB/databaseAccounts/{account_name}
+            """
+    send_email(account_name, subject, body, settings)
 
 
 def send_deletion_success_email(
@@ -329,12 +319,20 @@ async def delete_cosmos_account(
         HTTPException: If account does not exist or errors
    """
    try:
+        StatusTracker.update_status(
+          account_name=account_name,
+          status=CosmosAccountStatus.QUEUED,
+            message="Deletion Initiated"
+        )
         await manager.delete_account_async(account_name)
         send_deletion_success_email(account_name, settings)
-        # return Response(status_code=status.HTTP_204_NO_CONTENT)
    except ValueError as e:
        #account does not exist
-        logger.error(str(e))
+        StatusTracker.update_status(
+            account_name=account_name,
+            status=CosmosAccountStatus.ERROR,
+            message="Account not found"
+        )
         send_deletion_failure_email(
                 account_name,
                 str(e),
@@ -361,24 +359,3 @@ async def delete_cosmos_account(
                 "message": str(e),
               }
          )
-
-
-# async def execute_deletion(
-#         manager: AzureCosmosManager,
-#         account_name: str,
-#         settings: Settings
-# ) -> None:
-#     """Background task for actual deletion"""
-#     try:
-#         #1. perform actual deletion
-#         await manager.delete_account_async(account_name)
-#         send_deletion_success_email(account_name, settings)
-#     except Exception as e:
-#         send_deletion_failure_email(account_name, str(e), settings)
-#         raise HTTPException(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             detail={
-#                 "error_code": "AZURE_ERROR",
-#                 "message": str(e),
-#             }
-#         ) from e
