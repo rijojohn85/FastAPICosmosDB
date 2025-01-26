@@ -115,6 +115,22 @@ async def create_cosmos_account(
             "error_code": "AZURE_ERROR",
             "message": str(e),
         })
+    except Exception as e:
+        background_tasks.add_task(
+            send_failure_notification,
+            request.account_name,
+            str(e),
+            settings
+        )
+        logger.error(str(e))
+        StatusTracker.update_status(
+            account_name=request.account_name,
+            status=CosmosAccountStatus.ERROR,
+            message=str(e),
+        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={
+            "error_code": "INTERNAL_ERROR"+" "+str(e),
+        })
 
 
 @router.get(

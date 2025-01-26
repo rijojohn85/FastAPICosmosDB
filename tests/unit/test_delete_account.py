@@ -30,6 +30,7 @@ def test_successful_delete_account_with_email()-> None:
         mock_instance.delete_account_async.assert_awaited_once_with("test_account")
         mock_send_failure.assert_not_called()
         mock_send_success.assert_called_once()
+        app.dependency_overrides.clear()
 
 def test_unsuccessful_delete_account_with_email()-> None:
     #Setup
@@ -51,3 +52,4 @@ def test_unsuccessful_delete_account_with_email()-> None:
         # mock_instance.delete_account_async.assert_awaited_once_with("failing-account")
         mock_send_success.assert_called_once()
         mock_send_failure.assert_not_called()
+        app.dependency_overrides.clear()
