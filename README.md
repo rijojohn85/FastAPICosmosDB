@@ -34,15 +34,37 @@ curl -sSL https://install.python-poetry.org | python3
 ```bash
 poetry install
 ```
-4. Run the uvicorn server
+4. Install and sign into Azure CLI
+```bash
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+az login
+````
+5. Set up .env file:
+ - Create Azure account
+ - Create a new resource group
+ - Generate gmail app password [Link](https://support.google.com/mail/answer/185833?hl=en)
+```
+AZURE_SUBSCRIPTION_ID=<azure subsciption id>
+AZURE_RESOURCE_GROUP=<azure resource group name>
+
+# Email Configuration
+GMAIL_ADDRESS=<email id to send and recieve email notification>
+GMAIL_PASSWORD=<app password for gmail> 
+```
+6. Run the uvicorn server
 ```bash
 poetry run uvicorn app.main:app --reload
 ```
-5. Open the browser and navigate to http://127.0.0.1:8000/
-6. You can see the swagger documentation for the API at http://127.0.0.1:8000/docs
+7. Open the browser and navigate to http://127.0.0.1:8000/
+8. You can see the swagger documentation for the API at http://127.0.0.1:8000/docs
 
 ## Current Status:
 
 1. API to create and Delete CosmosDB account is implemented
 2. Email notification on creation of CosmosDB account is implemented
 3. Get status of provisioning/deletion of CosmosDB account is implemented
+
+## Next steps
+1. Add more unit tests
+2. Create and delete databases
+3. Create and delete collections

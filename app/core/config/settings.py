@@ -29,17 +29,6 @@ class Settings(BaseSettings):
         ...,
         description="Email password for sending email",
     )
-    SECRET_KEY: str = Field(
-        ...,
-        min_length=32,
-        description="Secret key for cryptographic operation",
-    )
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
-        30,
-        ge=15,
-        le=1440,
-        description="Expiration time for JWT token",
-    )
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
