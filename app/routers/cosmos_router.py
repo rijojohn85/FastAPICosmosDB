@@ -14,7 +14,6 @@ from app.models.cosmos_models import (
 from app.services.azure_cosmos_manager import AzureCosmosManager
 from app.services.status_tracker import StatusTracker
 from app.models.custom_types import CosmosAPIType, CosmosAccountStatus
-from app.services.gmail_sender import GmailSender
 from app.core.config.settings import get_settings, Settings
 import asyncio
 from azure.core.polling import AsyncLROPoller
@@ -240,17 +239,13 @@ def send_deletion_success_email(
 
     Args:
         account_name: Provisioned account name
+        api_type: Cosmos DB API type used
+        location: Azure region where account was created
         settings: Application configuration with email details
     """
-    try:
-        with GmailSender(settings) as sender:
-            sender.send(
-                to=settings.GMAIL_ADDRESS,
-                subject=f"✅ Cosmos DB Account Deleted: {account_name}",
-                body=f"""Your Azure Cosmos DB account {account_name} has been successfully deleted."""
-            )
-    except Exception as email_error:
-        logger.error("EMail error: " + str(email_error))
+    subject=f"✅ Cosmos DB Account Deleted: {account_name}"
+    body=f"Your Azure Cosmos DB account {account_name} has been successfully deleted."
+    send_email(account_name, subject, body, settings)
 
 def send_deletion_failure_email(
         account_name: str,
@@ -265,16 +260,9 @@ def send_deletion_failure_email(
         error_message: Error message
         settings: Application configuration with email details
     """
-    try:
-        with GmailSender(settings) as sender:
-            sender.send(
-                to=settings.GMAIL_ADDRESS,
-                subject=f"❌ Cosmos DB Account Deletion Failed: {account_name}",
-                body=f"""Failed to delete Cosmos DB account {account_name}. Error: {error_message}"""
-            )
-    except Exception as email_error:
-        logger.error("EMail error: " + str(email_error))
-
+    subject=f"❌ Cosmos DB Account Deletion Failed: {account_name}"
+    body=f"""Failed to delete Cosmos DB account {account_name}. Error: {error_message}"""
+    send_email(account_name, subject, body, settings)
 
 @router.delete(
     "/accounts/{account_name}",
