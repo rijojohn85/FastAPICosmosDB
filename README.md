@@ -55,8 +55,7 @@ GMAIL_PASSWORD=<app password for gmail>
 ```bash
 poetry run uvicorn app.main:app --reload
 ```
-7. Open the browser and navigate to http://127.0.0.1:8000/
-8. You can see the swagger documentation for the API at http://127.0.0.1:8000/docs
+7. You can see the swagger documentation for the API at http://127.0.0.1:8000/docs
 
 ## Current Status:
 
