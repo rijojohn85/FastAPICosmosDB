@@ -1,11 +1,9 @@
-from sys import exception
 
 import httpx
 from fastapi.testclient import TestClient
 from unittest.mock import patch, AsyncMock
 from app.main import app
 from app.routers.cosmos_router import get_cosmos_manager
-from app.services.logging_service import logger
 
 
 def test_successful_delete_account_with_email()-> None:
@@ -32,7 +30,6 @@ def test_unsuccessful_delete_account_with_email()-> None:
     #Setup
     with (
         patch("app.routers.cosmos_router.AzureCosmosManager")   as mock_manager,
-        patch("app.routers.cosmos_router.send_deletion_failure_email") as mock_email,
     ):
         mock_instance = mock_manager.return_value
         mock_instance.account_exists = AsyncMock(return_value=False)

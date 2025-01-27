@@ -1,14 +1,12 @@
 import pytest
-from datetime import datetime
 from unittest.mock import AsyncMock, patch, MagicMock
 from fastapi.testclient import TestClient
 from fastapi import status
 from httpx import Response
 
-from pytest_mock import MockFixture, MockerFixture
-from app.models.cosmos_models import CosmosAPIType, CosmosAccountStatusResponse
+from pytest_mock import MockerFixture
+from app.models.cosmos_models import CosmosAPIType
 
-from app.models.custom_types import CosmosAccountStatus
 
 
 @pytest.mark.asyncio

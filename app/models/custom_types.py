@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Literal, TypedDict
+from typing import TypedDict
 
 class CosmosAPIType(str, Enum):
     SQL = "sql"

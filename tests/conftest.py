@@ -1,7 +1,6 @@
 import pytest
 import os
 from fastapi.testclient import TestClient
-from app.main import app
 from dotenv import load_dotenv
 from app.core.config.settings import Settings
 

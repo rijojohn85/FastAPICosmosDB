@@ -187,7 +187,6 @@ async def execute_provisioning(
 )
 async def delete_cosmos_account(
         account_name: str,
-        background_tasks: BackgroundTasks,
         manager: Annotated[AzureCosmosManager, Depends(get_cosmos_manager)],
         settings: Annotated[Settings, Depends(get_settings)]) -> None:
    """
@@ -195,7 +194,6 @@ async def delete_cosmos_account(
 
    Args:
         account_name: Name of the account to delete
-        background_tasks: BackgroundTasks dependency
         manager: Injected AzureCosmosManager dependency
         settings: Injected Settings dependency
     Raises:

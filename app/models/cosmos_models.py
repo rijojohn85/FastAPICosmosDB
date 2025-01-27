@@ -1,8 +1,11 @@
-import re
+#import re
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
+#from pydantic import field_validator
 from app.models.custom_types import CosmosAPIType, CosmosAccountStatus
 
+
+# noinspection SpellCheckingInspection
 class CreateCosmosAccountRequest(BaseModel):
     account_name: str = Field(
         ...,

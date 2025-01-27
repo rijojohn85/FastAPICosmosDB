@@ -33,7 +33,7 @@ def send_success_notification(
 
             Azure Portal Link: https://portal.azure.com/#resource/subscriptions/{settings.AZURE_SUBSCRIPTION_ID}/resourceGroups/{settings.AZURE_RESOURCE_GROUP}/providers/Microsoft.DocumentDB/databaseAccounts/{account_name}
             """
-    send_email(account_name, subject, body, settings)
+    send_email(subject, body, settings)
 
 
 def send_deletion_failure_email(
@@ -51,7 +51,7 @@ def send_deletion_failure_email(
     """
     subject=f"❌ Cosmos DB Account Deletion Failed: {account_name}"
     body=f"""Failed to delete Cosmos DB account {account_name}. Error: {error_message}"""
-    send_email(account_name, subject, body, settings)
+    send_email( subject, body, settings)
 
 def send_deletion_success_email(
         account_name: str,
@@ -66,7 +66,7 @@ def send_deletion_success_email(
     """
     subject=f"✅ Cosmos DB Account Deleted: {account_name}"
     body=f"Your Azure Cosmos DB account {account_name} has been successfully deleted."
-    send_email(account_name, subject, body, settings)
+    send_email(subject, body, settings)
 
 def send_failure_notification(
         account_name: str,
@@ -84,4 +84,4 @@ def send_failure_notification(
                 3. Review account name availability
                 4. Ensure location selected is available for your account at this time.
                 Provisioning failed for {account_name} with error: {error_message}"""
-    send_email(account_name, subject, body, settings)
+    send_email(subject, body, settings)

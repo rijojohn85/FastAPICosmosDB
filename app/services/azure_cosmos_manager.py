@@ -1,7 +1,6 @@
 import asyncio
-from typing import Optional, Dict, Any, Annotated
+from typing import Optional
 from datetime import datetime
-from azure.core.polling import AsyncLROPoller
 
 import app.services.email_templates
 from app.core.config.settings import get_settings

@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Any, Dict
 from fastapi.testclient import TestClient
 
@@ -7,7 +6,6 @@ from app.main import app
 from unittest.mock import patch, AsyncMock
 import httpx
 from app.models.custom_types import CosmosAccountStatus, CosmosAPIType
-from app.models.cosmos_models import CosmosAccountStatusResponse
 from app.routers.cosmos_router import get_cosmos_manager
 from app.services.status_tracker import StatusTracker
 

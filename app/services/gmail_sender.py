@@ -1,7 +1,7 @@
 from typing import Optional, Dict, Any
 import smtplib
 from email.message import EmailMessage
-from app.core.config.settings import Settings, get_settings
+from app.core.config.settings import Settings
 from app.services.logging_service import logger
 
 class GmailSender:
@@ -49,6 +49,8 @@ class GmailSender:
             to (str): recipient email address
             subject (str): email subject
             body (str): email body
+            cc Option[str]: CC email address
+            bcc Optional[str]: BCC email address
         Returns:
             Dictionary with send operation results
         Raises:

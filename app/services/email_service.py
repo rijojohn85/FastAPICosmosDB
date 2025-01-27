@@ -2,7 +2,6 @@ from app.core.config.settings import Settings
 from app.services.gmail_sender import GmailSender
 from app.services.logging_service import logger
 def send_email(
-        account_name: str,
         subject: str,
         body: str,
         settings: Settings
@@ -10,7 +9,6 @@ def send_email(
     """
     Send email notification using Gmail API.
     Args:
-        account_name: Provisioned account name
         subject: Email subject
         body: Email body
         settings: Application configuration with email details
