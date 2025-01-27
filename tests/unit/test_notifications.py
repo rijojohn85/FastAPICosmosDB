@@ -46,34 +46,6 @@ async def test_provisioning_failure_sends_email(mocker: MockerFixture, client: T
     assert "Provisioning failed" in call_kwargs["subject"]
     assert "Disk Full" in call_kwargs["body"]
 
-@pytest.mark.asyncio
-async def test_provisioning_success_sends_email(mocker: MockerFixture, client: TestClient):
-    """Test successful provisioning triggers confirmation email"""
-    # Mock external dependencies
-    mock_email = mocker.patch("app.services.gmail_sender.GmailSender.send")
-    mock_manager = AsyncMock()
-
-    # Simulate successful provisioning
-    mock_manager.create_account_async.return_value = CosmosAccountStatusResponse(
-        account_name="success-account",
-        status=CosmosAccountStatus.QUEUED,
-        created_at=datetime.now(),
-        updated_at=datetime.now(),
-        message="Provisioning started"
-    )
-
-    with patch("app.routers.cosmos_router.AzureCosmosManager", return_value=mock_manager):
-        response = client.post(
-            "/cosmos/accounts",
-            json={
-                "account_name": "success-account",
-                "location": "Central India",
-                "api_type": "sql"
-            }
-        )
-        assert response.status_code == status.HTTP_202_ACCEPTED
-
-    # Verify email has been sent
-    mock_email.assert_called_once()
+#TODO: need to write test for successful provisioning email sending
 
 

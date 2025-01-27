@@ -22,15 +22,7 @@ def test_create_cosmos_account_async() -> None:
 
     ):
 
-        mock_async_method: AsyncMock =AsyncMock(
-            return_value=CosmosAccountStatusResponse(
-                account_name="test_account",
-                status= CosmosAccountStatus.QUEUED,
-                created_at=datetime.now(),
-                updated_at=datetime.now(),
-                message="Provisioning initiated",
-            )
-        )
+        mock_async_method: AsyncMock =AsyncMock()
 
 
         # Configure mock instance

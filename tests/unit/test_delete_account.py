@@ -12,8 +12,6 @@ def test_successful_delete_account_with_email()-> None:
     #Setup
     with (
         patch("app.routers.cosmos_router.AzureCosmosManager")   as mock_manager,
-        patch("app.routers.cosmos_router.send_deletion_success_email") as mock_send_success,
-        patch("app.routers.cosmos_router.send_deletion_failure_email") as mock_send_failure,
     ):
 
         mock_instance = mock_manager.return_value
@@ -28,16 +26,13 @@ def test_successful_delete_account_with_email()-> None:
         assert response.status_code == 204
         assert not response.content
         mock_instance.delete_account_async.assert_awaited_once_with("test_account")
-        mock_send_failure.assert_not_called()
-        mock_send_success.assert_called_once()
         app.dependency_overrides.clear()
 
 def test_unsuccessful_delete_account_with_email()-> None:
     #Setup
     with (
         patch("app.routers.cosmos_router.AzureCosmosManager")   as mock_manager,
-        patch("app.routers.cosmos_router.send_deletion_success_email") as mock_send_failure,
-        patch("app.routers.cosmos_router.send_deletion_failure_email") as mock_send_success,
+        patch("app.routers.cosmos_router.send_deletion_failure_email") as mock_email,
     ):
         mock_instance = mock_manager.return_value
         mock_instance.account_exists = AsyncMock(return_value=False)
@@ -49,7 +44,5 @@ def test_unsuccessful_delete_account_with_email()-> None:
         client = TestClient(app)
         response: httpx.Response = client.delete("/cosmos/accounts/failing-account")
         assert response.status_code == 404
-        # mock_instance.delete_account_async.assert_awaited_once_with("failing-account")
-        mock_send_success.assert_called_once()
-        mock_send_failure.assert_not_called()
+        mock_instance.delete_account_async.assert_called_once_with("failing-account")
         app.dependency_overrides.clear()

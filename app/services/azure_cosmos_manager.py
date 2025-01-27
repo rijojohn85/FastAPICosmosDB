@@ -3,6 +3,8 @@ from typing import Optional, Dict, Any, Annotated
 from datetime import datetime
 from azure.core.polling import AsyncLROPoller
 
+import app.services.email_templates
+from app.core.config.settings import get_settings
 from app.services.logging_service import logger
 
 from azure.identity import AzureCliCredential
@@ -80,7 +82,7 @@ class AzureCosmosManager:
             account_name: str,
             location: str,
             api_type: CosmosAPIType,
-    )->AsyncLROPoller[None]:
+    )->None:
         """Asynchronously provisions a new Azure Cosmos DB account.
         Args:
             account_name: Globally unique name of the Azure Cosmos DB account.(3-44 lowercase alphanumeric chars)
@@ -105,14 +107,41 @@ class AzureCosmosManager:
                 api_properties=self._get_api_properties(api_type),
             )
             #start async provisioning using thread pool executor
-            return await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: self.client.database_accounts.begin_create_or_update(
+            def sync_create_and_wait():
+                poller = self.client.database_accounts.begin_create_or_update(
                     resource_group_name=self.resource_group,
                     account_name=account_name,
-                    create_update_parameters=create_params,
+                    create_update_parameters=create_params
                 )
-            )
+                return poller.result()
+            future = asyncio.get_event_loop().run_in_executor(None, sync_create_and_wait)
+            def callback(fut: asyncio.Future[None])->None:
+                try:
+                    fut.result()
+                    StatusTracker.update_status(
+                        account_name=account_name,
+                        status=CosmosAccountStatus.COMPLETED,
+                        message="Provisioning completed successfully"
+                    )
+                    app.services.email_templates.send_success_notification(
+                        account_name,
+                        api_type,
+                        location,
+                        get_settings()
+                    )
+                except Exception as e:
+                    logger.error(str(e))
+                    StatusTracker.update_status(
+                        account_name=account_name,
+                        status=CosmosAccountStatus.ERROR,
+                        message=str(e),
+                    )
+                    app.services.email_templates.send_failure_notification(
+                        account_name,
+                        str(e),
+                        get_settings()
+                    )
+            future.add_done_callback(callback)
 
         except AzureError as err:
             logger.error(err.message)
@@ -134,28 +163,72 @@ class AzureCosmosManager:
         account = self.get_account_async(account_name)
         return account is not None
 
-    async def delete_account_async(self, account_name: str)->CosmosAccountStatusResponse:
+    async def delete_account_async(self, account_name: str)->None:
         """Asynchronously deletes an Azure Cosmos DB account."""
         if not self.account_exists(account_name):
             raise ValueError(f"Account {account_name} does not exist.")
         try:
             #start async provisioning using thread pool executor
-            poller = await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: self.client.database_accounts.begin_delete(
+            #start async provisioning using thread pool executor
+            def sync_create_and_wait():
+                poller = self.client.database_accounts.begin_delete(
                     resource_group_name=self.resource_group,
                     account_name=account_name,
-                ),
-            )
-            return self._create_status_response(
-                account_name,
-                CosmosAccountStatus.QUEUED,
-                "Provisioning Initiated"
-            )
+                )
+                return poller.result()
+            future = asyncio.get_event_loop().run_in_executor(None, sync_create_and_wait)
+            def callback(fut: asyncio.Future[None])->None:
+                try:
+                    fut.result()
+                    StatusTracker.update_status(
+                        account_name=account_name,
+                        status=CosmosAccountStatus.COMPLETED,
+                        message="Deleting completed successfully"
+                    )
+                    app.services.email_templates.send_deletion_success_email(
+                        account_name,
+                        get_settings()
+                    )
+                except Exception as e:
+                    logger.error(str(e))
+                    StatusTracker.update_status(
+                        account_name=account_name,
+                        status=CosmosAccountStatus.ERROR,
+                        message=str(e),
+                    )
+                    app.services.email_templates.send_deletion_failure_email(
+                        account_name,
+                        str(e),
+                        get_settings()
+                    )
+            future.add_done_callback(callback)
+            # poller = await asyncio.get_event_loop().run_in_executor(
+            #     None,
+            #     lambda: self.client.database_accounts.begin_delete(
+            #         resource_group_name=self.resource_group,
+            #         account_name=account_name,
+            #     ),
+            # )
+            # def callback(fut: asyncio.Future[None])->None:
+            #     if fut.exception():
+            #         logger.error(fut.exception())
+            #         StatusTracker.update_status(
+            #             account_name=account_name,
+            #             status=CosmosAccountStatus.ERROR,
+            #             message=str(fut.exception())
+            #         )
+            #         app.services.email_templates.send_deletion_failure_email(account_name, str(fut.exception()), get_settings())
+            #     else:
+            #         StatusTracker.update_status(
+            #             account_name=account_name,
+            #             status=CosmosAccountStatus.COMPLETED,
+            #             message="Delete completed successfully"
+            #         )
+            #         app.services.email_templates.send_deletion_success_email(
+            #             account_name,
+            #             get_settings()
+            #         )
+            # poller.add_done_callback(callback)
         except AzureError as err:
             logger.error(err.message)
-            return self._create_status_response(
-                account_name,
-                CosmosAccountStatus.ERROR,
-                f"Azure Error: {str(err)}"
-            )
+            raise Exception(">>> Error: " + str(err) + " <<<")

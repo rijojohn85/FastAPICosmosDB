@@ -1,10 +1,8 @@
 from typing import Annotated
-from datetime import datetime
-
+from app.services.email_templates import  send_failure_notification, send_deletion_failure_email
 from azure.core.exceptions import AzureError
-from fastapi import APIRouter, BackgroundTasks, status, HTTPException, Depends, Response
+from fastapi import APIRouter, BackgroundTasks, status, HTTPException, Depends
 from app.services.logging_service import logger
-from app.services.email_service import send_email
 
 from app.models.cosmos_models import (
     CreateCosmosAccountRequest,
@@ -15,8 +13,6 @@ from app.services.azure_cosmos_manager import AzureCosmosManager
 from app.services.status_tracker import StatusTracker
 from app.models.custom_types import CosmosAPIType, CosmosAccountStatus
 from app.core.config.settings import get_settings, Settings
-import asyncio
-from azure.core.polling import AsyncLROPoller
 router = APIRouter(
     prefix="/cosmos",
     tags=["cosmosdb"],
@@ -26,9 +22,6 @@ router = APIRouter(
 )
 
 
-# load_dotenv()
-# subscription_id = os.getenv("AZURE_SUBSCRIPTION_ID")
-# resource_group = os.getenv("AZURE_RESOURCE_GROUP")
 
 async def get_cosmos_manager(settings: Annotated[Settings, Depends(get_settings)]) -> AzureCosmosManager:
     """Dependency that provides a configured AzureCosmosManager instance"""
@@ -169,28 +162,11 @@ async def execute_provisioning(
             status=CosmosAccountStatus.IN_PROGRESS,
             message="Resource provisioning started"
         )
-        #1. perform actual provisioning
-        poller: AsyncLROPoller = await manager.create_account_async(
+        # perform actual provisioning
+        await manager.create_account_async(
             account_name=account_name,
             location=location,
             api_type=api_type,
-        )
-        await asyncio.get_event_loop().run_in_executor(
-            None,
-            poller.result,
-        )
-        #2. Update status
-        StatusTracker.update_status(
-            account_name=account_name,
-            status=CosmosAccountStatus.COMPLETED,
-            message="Provisioning completed successfully"
-        )
-        #3. Send email
-        send_success_notification(
-            account_name,
-            api_type,
-            location,
-            get_settings()
         )
     except Exception as e:
         logger.error(str(e))
@@ -205,72 +181,9 @@ async def execute_provisioning(
             str(e),
             settings
         )
-
-
-
-def send_failure_notification(
-        account_name: str,
-        error_message: str,
-        settings: Settings
-) -> None:
-    """Send email notification on provisioning failure"""
-    subject:str = f"Provisioning failed for {account_name}"
-    body: str= f"""CosmosDB account provisioning failed:
-                Account Name: {account_name}
-                Error: {error_message}
-                Required Action:
-                1. Check Azure portal for resource status.
-                2. Check detail.log file for errors
-                3. Review account name availability
-                4. Ensure location selected is available for your account at this time.
-                Provisioning failed for {account_name} with error: {error_message}"""
-    send_email(account_name, subject, body, settings)
-
-
-
-
-
-def send_deletion_success_email(
-        account_name: str,
-        settings: Settings
-) -> None:
-    """
-    Send success email notification with account details.
-
-    Args:
-        account_name: Provisioned account name
-        api_type: Cosmos DB API type used
-        location: Azure region where account was created
-        settings: Application configuration with email details
-    """
-    subject=f"✅ Cosmos DB Account Deleted: {account_name}"
-    body=f"Your Azure Cosmos DB account {account_name} has been successfully deleted."
-    send_email(account_name, subject, body, settings)
-
-def send_deletion_failure_email(
-        account_name: str,
-        error_message: str,
-        settings: Settings
-) -> None:
-    """
-    Send failure email notification with account details.
-
-    Args:
-        account_name: Provisioned account name
-        error_message: Error message
-        settings: Application configuration with email details
-    """
-    subject=f"❌ Cosmos DB Account Deletion Failed: {account_name}"
-    body=f"""Failed to delete Cosmos DB account {account_name}. Error: {error_message}"""
-    send_email(account_name, subject, body, settings)
-
 @router.delete(
     "/accounts/{account_name}",
     status_code=status.HTTP_204_NO_CONTENT,
-    # responses={
-    #     status.HTTP_404_NOT_FOUND: {"description": "Not found"},
-    #     status.HTTP_500_INTERNAL_SERVER_ERROR: { "description": "Internal Server Error"},
-    # }
 )
 async def delete_cosmos_account(
         account_name: str,
@@ -295,7 +208,11 @@ async def delete_cosmos_account(
             message="Deletion Initiated"
         )
         await manager.delete_account_async(account_name)
-        send_deletion_success_email(account_name, settings)
+        StatusTracker.update_status(
+            account_name,
+            CosmosAccountStatus.IN_PROGRESS,
+            message="Deletion request sent to Azure"
+        )
    except ValueError as e:
        #account does not exist
         StatusTracker.update_status(
@@ -329,35 +246,3 @@ async def delete_cosmos_account(
                 "message": str(e),
               }
          )
-def send_success_notification(
-        account_name: str,
-        api_type: CosmosAPIType,
-        location: str,
-        settings: Settings
-) -> None:
-    """
-    Send success email notification with account details.
-
-    Args:
-        account_name: Provisioned account name
-        api_type: Cosmos DB API type used
-        location: Azure region where account was created
-        settings: Application configuration with email details
-    """
-    subject =  f"✅ Cosmos DB Account Ready: {account_name}"
-    body=f"""Your Azure Cosmos DB account has been successfully provisioned!
-
-            Account Details:
-            • Name: {account_name}
-            • API Type: {api_type.value}
-            • Location: {location}
-            • Provisioning Time: {datetime.now().strftime("%Y-%m-%d %H:%M UTC")}
-
-            Next Steps:
-            1. Create databases and containers
-            2. Configure access policies
-            3. Connect using connection strings
-
-            Azure Portal Link: https://portal.azure.com/#resource/subscriptions/{settings.AZURE_SUBSCRIPTION_ID}/resourceGroups/{settings.AZURE_RESOURCE_GROUP}/providers/Microsoft.DocumentDB/databaseAccounts/{account_name}
-            """
-    send_email(account_name, subject, body, settings)
